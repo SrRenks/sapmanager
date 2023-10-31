@@ -17,7 +17,7 @@ A **Class** who starts SAP logged into the selected system with the credentials 
 | password | **str** |
 | path | **str** or **None**|
 
-- **system**: the system you will use.
+- **system**: the system (by SID) you will use.
 
 - **mandt**: the mandt you will use in the system.
 
@@ -29,11 +29,13 @@ A **Class** who starts SAP logged into the selected system with the credentials 
 
 - **language**: the language that will be used in SAP, by default is "EN".
 
+- **timeout**: the timeout max value that will be used in SAP to connect into system, default is 10.
+
 Example:
 ```
 from sapmanager import Sap
 
-session = Sap("1. prod", "500", "Renks", "password")
+session = Sap("PRD", "500", "Renks", "password")
 ```
 >After success, it will be possible to use the SAP scripting with your account already logged in the selected system.
 
