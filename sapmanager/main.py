@@ -3,6 +3,7 @@ from win32com.client import CDispatch, GetObject
 from win32gui import FindWindowEx
 from subprocess import Popen
 from typing import Union
+import time
 import os
 
 
@@ -19,48 +20,35 @@ class Sap(object):
     - language(`str`) the language that will be used in SAP, by default is "EN"
     """
 
-    def __new__(cls, system: str, mandt: str, user: str, password: str, path: str = None, language="EN") -> Union[CDispatch, None]:
-        system = cls.__check_str_arg(system, "system")
-        mandt = cls.__check_str_arg(mandt, "mandt")
-        user = cls.__check_str_arg(user, "user")
-        password = cls.__check_str_arg(password, "password")
-        language = cls.__check_str_arg(language, "language")
+    def __new__(cls, system: str,
+                mandt: str,
+                user: str,
+                password: str,
+                path: str = None,
+                language="EN",
+                timeout=10) -> Union[CDispatch, None]:
+
+        system = cls.__check_arg_type(system, str, "system")
+        mandt = cls.__check_arg_type(mandt, str, "mandt")
+        user = cls.__check_arg_type(user, str, "user")
+        password = cls.__check_arg_type(password, str, "password")
+        language = cls.__check_arg_type(language, str, "language")
         path = cls.__check_path(path)
+        timeout = cls.__check_arg_type(timeout, int, "timoeut")
 
-        Popen(path, shell=True)
-        while True:
-            if FindWindowEx(None, None, None, "SAP Logon 740") != 0:
+        process = Popen(f"{path} -system={system} -client={mandt} -user={user} -pw={password} -language={language}")
+
+        start_time = time.time()
+        while time.time() < start_time + timeout:
+            if FindWindowEx(None, None, None, "SAP") != 0:
                 break
-        SapGuiAuto = GetObject('SAPGUI')
-        if not type(SapGuiAuto) == CDispatch:
-            return
 
-        application = SapGuiAuto.GetScriptingEngine
-        if not type(application) == CDispatch:
-            SapGuiAuto = None
-            return
-        try:
-            connection = application.OpenConnection(system)
-        except Exception:
-            raise SapConnectionError(f'Could not open connection to System "{system}"')
+            if time.time() >= start_time + timeout:
 
-        if not type(connection) == CDispatch:
-            application = None
-            SapGuiAuto = None
-            return
+                raise ConnectionError("timeout for connect into system has been reached")
 
-        session = connection.Children(0)
-        if not type(session) == CDispatch:
-            connection = None
-            application = None
-            SapGuiAuto = None
-            return
-
-        session.findById("wnd[0]/usr/txtRSYST-MANDT").text = mandt
-        session.findById("wnd[0]/usr/txtRSYST-BNAME").text = user
-        session.findById("wnd[0]/usr/pwdRSYST-BCODE").text = password
-        session.findById("wnd[0]/usr/txtRSYST-LANGU").text = language
-        session.findById("wnd[0]").sendVKey(0)
+        application = GetObject('SAPGUI').GetScriptingEngine
+        session = application.Children(0).Children(0)
 
         if session.Info.user:
             if session.ActiveWindow.Text == "Copyright":
@@ -71,20 +59,21 @@ class Sap(object):
             raise SapLoginError(error)
 
     @classmethod
-    def __check_str_arg(cls, arg, arg_name):
-        if not isinstance(arg, str):
+    def __check_arg_type(cls, arg, valid_type, arg_name):
+        if not isinstance(arg, valid_type):
             raise ValueError(f"{arg_name} must be str")
         return arg
 
     @classmethod
     def __check_path(cls, path):
         if path is None:
-            if os.path.exists(r"C:\\Program Files (x86)\\SAP\\FrontEnd\\SAPgui\\saplogon.exe"):
-                return r"C:\\Program Files (x86)\\SAP\\FrontEnd\\SAPgui\\saplogon.exe"
-            else:
-                OSError("saplogon.exe not found")
+            if not os.path.exists("C:\\Program Files\\SAP\\FrontEnd\\SAPGUI\\sapshcut.exe"):
+                OSError("sapshcut.exe not found")
+
+            return "C:\\Program Files\\SAP\\FrontEnd\\SAPGUI\\sapshcut.exe"
+
         if not isinstance(path, str):
             raise ValueError("the path must be str")
         if not os.path.exists(path):
-            raise OSError("saplogon.exe not found")
+            raise OSError("sapshcut.exe not found")
         return path
