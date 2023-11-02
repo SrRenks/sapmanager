@@ -39,7 +39,6 @@ class Sap(object):
         timeout = cls.__check_arg_type(timeout, int, "timoeut")
 
         process = Popen(f"{path} -system={system} -client={mandt} -user={user} -pw={password} -language={language}")
-        print(process.pid)
 
         start_time = time.time()
         while not cls.__get_process_pid("saplogon.exe") and win32gui.FindWindow("SAP Logon for Windows", "SAP Easy Access") == 0:
@@ -72,7 +71,6 @@ class Sap(object):
         data = processes.get(process_name, None)
         if data:
             data = data.Properties_("ProcessId").Value
-            print(data)
         return data
 
     @classmethod
