@@ -9,7 +9,7 @@ with open(os.path.join(current_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='sapmanager',
-    version='1.2.1',
+    version='1.2.2',
     license='MIT',
     description='An unofficial library to run SAP logged into the selected ambient with the credentials provided, facilitating Scripting.',
     long_description_content_type="text/markdown",
