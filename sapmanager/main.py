@@ -41,7 +41,7 @@ class Sap(object):
         process = Popen(f"{path} -system={system} -client={mandt} -user={user} -pw={password} -language={language}")
 
         start_time = time.time()
-        while not cls.__get_process_pid("saplogon.exe") and win32gui.FindWindow("SAP Logon for Windows", "SAP Easy Access") == 0:
+        while not cls.__check_sap_logon():
 
             if time.time() >= start_time + timeout:
 
@@ -87,6 +87,14 @@ class Sap(object):
         win32gui.EnumWindows(callback, hwnds)
 
         return [hwnd for hwnd in hwnds if ctypes.windll.user32.IsWindowVisible(hwnd)][0]
+
+    @classmethod
+    def __check_sap_logon(cls):
+        childs = ["SAP", "SAP Easy Access"]
+        for child in childs:
+            if win32gui.FindWindowEx(None, None, None, child) != 0:
+                win32gui.ShowWindow(win32gui.FindWindowEx(None, None, None, child), win32con.SW_RESTORE)
+                return True
 
     @classmethod
     def __get_sapgui_log(cls) -> str:
