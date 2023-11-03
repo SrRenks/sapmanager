@@ -2,6 +2,12 @@
 Include
 Lib
 Scripts
+bin
+build
+dist
+lib
+lib64
+sapmanager.egg-info
 pyvenv.cfg
 .env
 __pycache__/
